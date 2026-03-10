@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Text } from "../../components/Text";
-import { TextInput } from "../../components/TextInput";
+import { LabeledInput } from "../../components/LabeledInput";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +16,7 @@ import { useState } from "react";
 import { resetPassword } from "../../services/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
+import { ThemeToggle } from "../../components/ThemeToggle";
 
 const schema = z.object({
   code: z
@@ -69,7 +70,7 @@ export default function ResetPasswordScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-white"
+      className="flex-1 bg-slate-50 dark:bg-slate-950"
       style={{ paddingTop: insets.top }}
     >
       <ScrollView
@@ -81,80 +82,71 @@ export default function ResetPasswordScreen() {
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <Pressable onPress={() => router.back()} className="mb-6 self-start">
-          <Text className="text-emerald-600">Back</Text>
-        </Pressable>
+        <View className="mb-6 flex-row items-center justify-between">
+          <Pressable onPress={() => router.back()} className="self-start">
+            <Text className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+              Back
+            </Text>
+          </Pressable>
+          <ThemeToggle />
+        </View>
 
-        <Text className="mb-1 text-2xl font-bold text-slate-800">
+        <Text className="mb-1 text-2xl font-extrabold text-slate-900 dark:text-slate-50">
           Reset password
         </Text>
-        <Text className="mb-8 text-slate-600">
+        <Text className="mb-6 text-sm text-slate-600 dark:text-slate-400">
           Enter the 6-digit code and your new password.
         </Text>
 
-        {apiError ? (
-          <View className="mb-4 rounded-lg bg-red-50 p-3">
-            <Text className="text-red-700">{apiError}</Text>
-          </View>
-        ) : null}
-
-        <Controller
-          control={control}
-          name="code"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <View className="mb-4">
-              <Text className="mb-1 text-sm font-medium text-slate-700">
-                Code
+        <View className="mb-8 rounded-3xl bg-white/90 px-4 py-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900/90 dark:ring-slate-800">
+          {apiError ? (
+            <View className="mb-4 rounded-xl bg-red-50 px-3 py-2 dark:bg-red-950/40 dark:ring-1 dark:ring-red-500/50">
+              <Text className="text-sm text-red-700 dark:text-red-300">
+                {apiError}
               </Text>
-              <TextInput
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-800"
+            </View>
+          ) : null}
+
+          <Controller
+            control={control}
+            name="code"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <LabeledInput
+                label="Code"
+                value={value}
+                onBlur={onBlur}
+                onChangeText={onChange}
                 placeholder="000000"
-                placeholderTextColor="#94a3b8"
                 keyboardType="number-pad"
                 maxLength={6}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
+                errorText={errors.code?.message}
+                containerClassName="mb-4"
               />
-              {errors.code ? (
-                <Text className="mt-1 text-sm text-red-600">
-                  {errors.code.message}
-                </Text>
-              ) : null}
-            </View>
-          )}
-        />
+            )}
+          />
 
-        <Controller
-          control={control}
-          name="new_password"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <View className="mb-6">
-              <Text className="mb-1 text-sm font-medium text-slate-700">
-                New password (min 8 characters)
-              </Text>
-              <TextInput
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-800"
-                placeholder="••••••••"
-                placeholderTextColor="#94a3b8"
-                secureTextEntry
+          <Controller
+            control={control}
+            name="new_password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <LabeledInput
+                label="New password (min 8 characters)"
+                value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
-                value={value}
+                placeholder="••••••••"
+                secureTextEntry
+                errorText={errors.new_password?.message}
+                containerClassName="mb-2"
               />
-              {errors.new_password ? (
-                <Text className="mt-1 text-sm text-red-600">
-                  {errors.new_password.message}
-                </Text>
-              ) : null}
-            </View>
-          )}
-        />
+            )}
+          />
+        </View>
 
         <Pressable
           onPress={handleSubmit(onSubmit)}
           disabled={isSubmitting}
-          className="rounded-xl bg-emerald-600 py-4 active:opacity-80 disabled:opacity-60"
+          className="rounded-2xl bg-primary-600 py-4 shadow-md shadow-primary-500/40 active:opacity-90 disabled:opacity-60"
         >
           {isSubmitting ? (
             <ActivityIndicator color="#fff" />
@@ -165,8 +157,13 @@ export default function ResetPasswordScreen() {
           )}
         </Pressable>
 
-        <Pressable onPress={() => router.replace("/(auth)/login")} className="mt-6">
-          <Text className="text-center text-emerald-600">Back to sign in</Text>
+        <Pressable
+          onPress={() => router.replace("/(auth)/login")}
+          className="mt-6"
+        >
+          <Text className="text-center font-semibold text-primary-600 dark:text-primary-400">
+            Back to sign in
+          </Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

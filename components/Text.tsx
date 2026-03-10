@@ -5,5 +5,11 @@ const defaultFontStyle = { fontFamily: "GoogleSansFlex" as const };
 
 export function Text(props: TextProps) {
   const { style, ...rest } = props;
-  return <RNText style={[style, defaultFontStyle]} {...rest} />;
+  return (
+    <RNText
+      allowFontScaling={false}
+      style={[style, defaultFontStyle]}
+      {...rest}
+    />
+  );
 }

@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 const ACCESS_TOKEN_KEY = "fintrack_access_token";
 const REFRESH_TOKEN_KEY = "fintrack_refresh_token";
 const ONBOARDING_KEY = "fintrack_has_onboarded";
+const THEME_KEY = "fintrack_theme";
 
 const isWeb = Platform.OS === "web";
 
@@ -63,4 +64,24 @@ export async function setHasOnboarded(): Promise<void> {
     return;
   }
   await SecureStore.setItemAsync(ONBOARDING_KEY, "true");
+}
+
+export async function getThemePreference(): Promise<"light" | "dark" | null> {
+  if (isWeb) {
+    if (typeof localStorage === "undefined") return null;
+    const value = localStorage.getItem(THEME_KEY);
+    return value === "light" || value === "dark" ? value : null;
+  }
+  const value = await SecureStore.getItemAsync(THEME_KEY);
+  return value === "light" || value === "dark" ? (value as "light" | "dark") : null;
+}
+
+export async function setThemePreference(theme: "light" | "dark"): Promise<void> {
+  if (isWeb) {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(THEME_KEY, theme);
+    }
+    return;
+  }
+  await SecureStore.setItemAsync(THEME_KEY, theme);
 }

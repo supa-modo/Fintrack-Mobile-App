@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { useAuthStore } from "../store/authStore";
+import { useThemeStore } from "../store/themeStore";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,6 +18,7 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const [hydrated, setHydrated] = useState(false);
+  const [themeHydrated, setThemeHydrated] = useState(false);
 
   const [fontsLoaded] = useFonts({
     GoogleSansFlex: require("../assets/fonts/GoogleSansFlex.ttf"),
@@ -24,12 +26,20 @@ function RootLayoutNav() {
 
   useEffect(() => {
     useAuthStore.getState().hydrate().then(() => setHydrated(true));
+    useThemeStore.getState().hydrate().then(() => setThemeHydrated(true));
   }, []);
 
   useEffect(() => {
-    if (!hydrated || !useAuthStore.getState().isReady || !fontsLoaded) return;
+    if (
+      !hydrated ||
+      !useAuthStore.getState().isReady ||
+      !themeHydrated ||
+      !fontsLoaded
+    ) {
+      return;
+    }
     SplashScreen.hideAsync();
-  }, [hydrated, fontsLoaded]);
+  }, [hydrated, themeHydrated, fontsLoaded]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }
