@@ -18,13 +18,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
 import { ThemeToggle } from "../../components/ThemeToggle";
 
-const schema = z.object({
-  code: z
-    .string()
-    .length(6, "Code must be 6 digits")
-    .regex(/^\d+$/, "Code must be numeric"),
-  new_password: z.string().min(8, "Password must be at least 8 characters"),
-});
+const schema = z
+  .object({
+    new_password: z.string().min(8, "Password must be at least 8 characters"),
+    confirm_password: z.string().min(8, "Password must be at least 8 characters"),
+  })
+  .refine((data) => data.new_password === data.confirm_password, {
+    message: "Passwords do not match",
+    path: ["confirm_password"],
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -34,9 +36,11 @@ export default function ResetPasswordScreen() {
   const params = useLocalSearchParams<{
     contact?: string;
     contactType?: string;
+    code?: string;
   }>();
-  const contact = params.contact ?? "";
+  const contact = (params.contact ?? "").toString();
   const isEmail = params.contactType === "email";
+  const code = (params.code ?? "").toString();
   const [apiError, setApiError] = useState<string | null>(null);
 
   const {
@@ -45,15 +49,27 @@ export default function ResetPasswordScreen() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { code: "", new_password: "" },
+    defaultValues: { new_password: "", confirm_password: "" },
   });
 
   const onSubmit = async (data: FormData) => {
     setApiError(null);
+    if (!contact || !code) {
+      setApiError("Reset session expired. Please start the reset process again.");
+      return;
+    }
     try {
+      if (__DEV__ || process.env.EXPO_PUBLIC_LOG_RESET_CODES === "true") {
+        // eslint-disable-next-line no-console
+        console.log("[DEV] Reset password submit", {
+          contactType: isEmail ? "email" : "phone",
+          contact,
+          code,
+        });
+      }
       await resetPassword({
         [isEmail ? "email" : "phone"]: contact,
-        code: data.code,
+        code,
         new_password: data.new_password,
       });
       router.replace("/(auth)/login");
@@ -109,24 +125,6 @@ export default function ResetPasswordScreen() {
 
           <Controller
             control={control}
-            name="code"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <LabeledInput
-                label="Code"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                placeholder="000000"
-                keyboardType="number-pad"
-                maxLength={6}
-                errorText={errors.code?.message}
-                containerClassName="mb-4"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
             name="new_password"
             render={({ field: { onChange, onBlur, value } }) => (
               <LabeledInput
@@ -138,6 +136,23 @@ export default function ResetPasswordScreen() {
                 secureTextEntry
                 errorText={errors.new_password?.message}
                 containerClassName="mb-2"
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="confirm_password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <LabeledInput
+                label="Confirm new password"
+                value={value}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                placeholder="••••••••"
+                secureTextEntry
+                errorText={errors.confirm_password?.message}
+                containerClassName="mb-1"
               />
             )}
           />

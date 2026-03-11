@@ -65,12 +65,17 @@ export default function LoginScreen() {
   const isDark = colorScheme === "dark";
 
   const onSubmit = async (data: FormData) => {
+    setApiError(null);
     try {
       const res = await loginApi(data);
       await setTokens(res.accessToken, res.refreshToken, res.user);
       router.replace("/(app)");
-    } catch {
-      setApiError("Invalid credentials. Please try again.");
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
+          : null;
+      setApiError(message ?? "Invalid credentials. Please try again.");
     }
   };
 
@@ -254,12 +259,7 @@ export default function LoginScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.ctaGradient}
             >
-              <LinearGradient
-                colors={["rgba(255,255,255,0.18)", "transparent"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.ctaShine}
-              />
+           
               {isSubmitting ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
@@ -280,10 +280,10 @@ export default function LoginScreen() {
           style={styles.dividerRow}
         >
           <View
+          className="ml-5 bg-gray-400 dark:bg-slate-500"
             style={[
               styles.dividerLine,
-              !isDark && { backgroundColor: "rgba(15,23,42,0.12)" },
-              isDark && { backgroundColor: "rgba(255,255,255,0.1)" },
+              
             ]}
           />
           <Text
@@ -296,10 +296,10 @@ export default function LoginScreen() {
             or continue with
           </Text>
           <View
+          className="mr-5 bg-gray-400 dark:bg-slate-500"
             style={[
               styles.dividerLine,
-              !isDark && { backgroundColor: "rgba(15,23,42,0.12)" },
-              isDark && { backgroundColor: "rgba(255,255,255,0.1)" },
+              
             ]}
           />
         </Animated.View>
@@ -311,18 +311,18 @@ export default function LoginScreen() {
         >
           {/* Google */}
           <Pressable
+          className="bg-white dark:bg-slate-900/80 border border-gray-200 dark:border-gray-700 rounded-full"
             style={({ pressed }) => [
               styles.socialBtn,
-              isDark
-                ? styles.socialBtnDark
-                : styles.socialBtnLight,
-              pressed && styles.socialBtnPressed,
+             pressed && styles.socialBtnPressed,
             ]}
           >
             <View style={styles.socialBtnInner}>
               {/* Google multicolour "G" SVG-equivalent using nested views */}
               <View style={styles.googleIconWrapper}>
-                <Text style={styles.googleG}>G</Text>
+              <Ionicons name="logo-google" size={18}
+               color= "#ef4444"
+               />
               </View>
               <Text
                 style={[
@@ -337,11 +337,10 @@ export default function LoginScreen() {
 
           {/* Apple */}
           <Pressable
+          className="bg-white dark:bg-slate-900/80 border border-gray-200 dark:border-gray-700 rounded-full"
             style={({ pressed }) => [
               styles.socialBtn,
-              isDark
-                ? styles.socialBtnDark
-                : styles.socialBtnLight,
+              
               pressed && styles.socialBtnPressed,
             ]}
           >
@@ -520,21 +519,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   ctaGradient: {
-    paddingVertical: 13,
+    height: 50,
+    paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 140,
     overflow: "hidden",
     position: "relative",
   },
-  ctaShine: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "50%",
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-  },
+  
   ctaContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -567,27 +559,21 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
   },
   dividerText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
   },
 
   /* ── Social buttons ── */
   socialRow: {
-    flexDirection: "row",
+    flexDirection: "column",
     gap: 12,
     marginBottom: 32,
   },
   socialBtn: {
     flex: 1,
-    borderRadius: 16,
+    
     overflow: "hidden",
-    // Solid shadow that works on both iOS and Android
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
+  
   },
   // Dark mode: semi-transparent white glass pill
   socialBtnDark: {
@@ -618,20 +604,11 @@ const styles = StyleSheet.create({
   googleIconWrapper: {
     width: 22,
     height: 22,
-    borderRadius: 11,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    // Thin coloured ring mimicking Google brand
-    borderWidth: 1.5,
-    borderColor: "#4285F4",
+
   },
-  googleG: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#4285F4",
-    lineHeight: 16,
-  },
+
   appleIconWrapper: {
     width: 22,
     height: 22,

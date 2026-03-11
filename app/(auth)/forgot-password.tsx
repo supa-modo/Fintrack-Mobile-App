@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Image,
 } from "react-native";
 import { Text } from "../../components/Text";
 import { LabeledInput } from "../../components/LabeledInput";
@@ -22,23 +23,22 @@ import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useColorScheme } from "nativewind";
 
-const schema = z
-  .object({
-    email: z.string().optional(),
-    phone: z.string().optional(),
-  })
-  .refine((data) => data.email?.trim() || data.phone?.trim(), {
-    message: "Provide email or phone",
-    path: ["email"],
-  });
+const schema = z.object({
+  contact: z.string().min(1, "Enter your email or phone number"),
+});
 
 type FormData = z.infer<typeof schema>;
+
+function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
 
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [lastContact, setLastContact] = useState<{ value: string; type: "email" | "phone" } | null>(null);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -48,29 +48,24 @@ export default function ForgotPasswordScreen() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", phone: "" },
+    defaultValues: { contact: "" },
   });
 
   const onSubmit = async (data: FormData) => {
     setApiError(null);
-    const email = data.email?.trim();
-    const phone = data.phone?.trim();
-    if (!email && !phone) {
-      setApiError("Provide email or phone");
+    const contact = data.contact.trim();
+    if (!contact) {
+      setApiError("Enter your email or phone number");
       return;
     }
+    const isEmailContact = isEmail(contact);
     try {
-      await requestPasswordReset({ email: email || undefined, phone: phone || undefined });
+      await requestPasswordReset({
+        email: isEmailContact ? contact : undefined,
+        phone: !isEmailContact ? contact : undefined,
+      });
       setSuccess(true);
-      setTimeout(() => {
-        router.push({
-          pathname: "/(auth)/reset-password",
-          params: {
-            contact: email || phone || "",
-            contactType: email ? "email" : "phone",
-          },
-        });
-      }, 800);
+      setLastContact({ value: contact, type: isEmailContact ? "email" : "phone" });
     } catch (err: unknown) {
       const message =
         err && typeof err === "object" && "response" in err
@@ -81,35 +76,8 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  if (success) {
-    return (
-      <View style={[styles.successScreen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        <LinearGradient
-          colors={isDark ? ["#020B18", "#041428", "#061C36"] : ["#F0F4FF", "#E8EEFF", "#F5F7FF"]}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <View style={styles.successInner}>
-          <View style={styles.successIconRing}>
-            <LinearGradient colors={["#3B82F6", "#1D4ED8"]} style={styles.successIconGrad}>
-              <Ionicons name="mail-outline" size={28} color="#fff" />
-            </LinearGradient>
-          </View>
-          <Text style={[styles.successTitle, !isDark && { color: "#0f172a" }]}>Check your inbox</Text>
-          <Text style={[styles.successSub, !isDark && { color: "rgba(71,85,105,0.8)" }]}>
-            A reset code has been sent to your email or phone.
-          </Text>
-          <ActivityIndicator style={{ marginTop: 24 }} size="small" color="#3B82F6" />
-        </View>
-        <View style={styles.toggleTopRight}>
-          <ThemeToggle />
-        </View>
-      </View>
-    );
-  }
-
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={[styles.flex, { paddingTop: insets.top }]}
     >
       {/* Background */}
@@ -121,6 +89,7 @@ export default function ForgotPasswordScreen() {
       <View style={[styles.glowBottomLeft, !isDark && { backgroundColor: "rgba(99,102,241,0.10)" }]} pointerEvents="none" />
 
       <ScrollView
+        className="mt-36 "
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 24 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -138,12 +107,14 @@ export default function ForgotPasswordScreen() {
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(600).springify()} style={styles.header}>
           {/* Icon badge */}
-          <View style={styles.iconBadge}>
-            <LinearGradient colors={["#3B82F6", "#1D4ED8"]} style={styles.iconBadgeGrad}>
-              <Ionicons name="lock-closed-outline" size={22} color="#fff" />
-            </LinearGradient>
+          <View>
+            <Image
+              source={require("../../assets/login.png")}
+              style={{ width: 250, height: 170, marginBottom: 10, marginLeft: -10 }}
+              resizeMode="cover"
+            />
           </View>
-          <Text style={[styles.headerTitle, !isDark && { color: "#0f172a" }]}>Forgot password?</Text>
+          <Text style={[styles.headerTitle, !isDark && { color: "#0f172a" }]}>Forgot Your password?</Text>
           <Text style={[styles.headerSub, !isDark && { color: "rgba(71,85,105,0.85)" }]}>
             Enter your email or phone and we'll send you a reset code.
           </Text>
@@ -164,77 +135,104 @@ export default function ForgotPasswordScreen() {
             </Animated.View>
           ) : null}
 
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <LabeledInput
-                label="Email"
-                value={value ?? ""}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                placeholder="you@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                containerClassName="mb-4"
-              />
-            )}
-          />
-
-          <View style={styles.orDivider}>
-            <View style={[styles.orLine, !isDark && { backgroundColor: "rgba(15,23,42,0.10)" }]} />
-            <Text style={[styles.orText, !isDark && { color: "rgba(71,85,105,0.5)" }]}>or</Text>
-            <View style={[styles.orLine, !isDark && { backgroundColor: "rgba(15,23,42,0.10)" }]} />
-          </View>
-
-          <Controller
-            control={control}
-            name="phone"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <LabeledInput
-                label="Phone"
-                value={value ?? ""}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                placeholder="+254712345678"
-                keyboardType="phone-pad"
-                errorText={(errors.email as { message?: string } | undefined)?.message}
-                containerClassName="mb-2"
-              />
-            )}
-          />
-          <Pressable
-            onPress={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            style={({ pressed }) => [
-              styles.ctaWrapper,
-              pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
-            ]}
-          >
-            <LinearGradient
-              colors={["#3B82F6", "#1D4ED8"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.ctaGradient}
-            >
-              <LinearGradient
-                colors={["rgba(255,255,255,0.18)", "transparent"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.ctaShine}
-              />
-              {isSubmitting ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <View style={styles.ctaContent}>
-                  <Text style={styles.ctaText}>Send Reset Code</Text>
-                  <View style={styles.ctaArrow}>
-                    <Ionicons name="arrow-forward" size={15} color="#fff" />
-                  </View>
+          {success && lastContact ? (
+            <Animated.View entering={FadeIn.duration(300)} style={styles.successInfoCard}>
+              <View style={styles.successIconRow}>
+                <View style={styles.successIconCircle}>
+                  <Ionicons name="checkmark" size={18} color="#22c55e" />
                 </View>
-              )}
-            </LinearGradient>
-          </Pressable>
+                <Text style={[styles.successHeading, !isDark && { color: "#0f172a" }]}>
+                  Reset code sent
+                </Text>
+              </View>
+              <Text style={[styles.successBody, !isDark && { color: "rgba(71,85,105,0.9)" }]}>
+                We&apos;ve sent a 6-digit password reset code to your{" "}
+                {lastContact.type === "email" ? "email address" : "phone number"}.
+              </Text>
+              <View style={styles.successSteps}>
+                <Text style={styles.successStepText}>1. Open your {lastContact.type === "email" ? "email inbox" : "SMS messages"}.</Text>
+                <Text style={styles.successStepText}>2. Find the 6-digit reset code.</Text>
+                <Text style={styles.successStepText}>3. Tap below to enter the code and choose a new password.</Text>
+              </View>
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/(auth)/enter-reset-code",
+                    params: {
+                      contact: lastContact.value,
+                      contactType: lastContact.type,
+                    },
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.enterCodeButton,
+                  pressed && { opacity: 0.92, transform: [{ scale: 0.985 }] },
+                ]}
+              >
+                <LinearGradient
+                  colors={["#3B82F6", "#1D4ED8"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.enterCodeGradient}
+                >
+                  <Text style={styles.enterCodeText}>Enter Reset Code</Text>
+                  <Ionicons name="key-outline" size={16} color="#fff" />
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          ) : (
+            <>
+              <Controller
+                control={control}
+                name="contact"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <LabeledInput
+                    label="Email or phone"
+                    value={value ?? ""}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    placeholder="you@example.com or +254712345678"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    errorText={errors.contact?.message}
+                    containerClassName="mb-6"
+                  />
+                )}
+              />
+              <Pressable
+                onPress={handleSubmit(onSubmit)}
+                disabled={isSubmitting}
+                style={({ pressed }) => [
+                  styles.ctaWrapper,
+                  pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
+                ]}
+              >
+                <LinearGradient
+                  colors={["#3B82F6", "#1D4ED8"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.ctaGradient}
+                >
+                  <LinearGradient
+                    colors={["rgba(255,255,255,0.18)", "transparent"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.ctaShine}
+                  />
+                  {isSubmitting ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <View style={styles.ctaContent}>
+                      <Text style={styles.ctaText}>Send Reset Code</Text>
+                      <View style={styles.ctaArrow}>
+                        <Ionicons name="arrow-forward" size={15} color="#fff" />
+                      </View>
+                    </View>
+                  )}
+                </LinearGradient>
+              </Pressable>
+            </>
+          )}
         </Animated.View>
 
 
@@ -290,17 +288,7 @@ const styles = StyleSheet.create({
 
   // Header
   header: { marginBottom: 28 },
-  iconBadge: {
-    width: 52, height: 52, borderRadius: 16,
-    marginBottom: 20,
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
-  },
-  iconBadgeGrad: {
-    width: 52, height: 52, borderRadius: 16,
-    alignItems: "center", justifyContent: "center",
-  },
+
   headerTitle: {
     fontSize: 28, fontWeight: "800",
     color: "#F8FAFC", lineHeight: 36,
@@ -316,7 +304,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 28, borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
-    padding: 24, marginBottom: 20,
+    padding: 24, marginBottom: 20, marginHorizontal: -10,
   },
 
   errorBanner: {
@@ -328,28 +316,76 @@ const styles = StyleSheet.create({
   },
   errorText: { color: "#f87171", fontSize: 13, flex: 1 },
 
-  orDivider: {
-    flexDirection: "row", alignItems: "center",
-    gap: 10, marginVertical: 12,
+  successInfoCard: {
+    borderRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: "rgba(59,130,246,0.07)",
+    borderWidth: 1,
+    borderColor: "rgba(37,99,235,0.4)",
   },
-  orLine: {
-    flex: 1, height: StyleSheet.hairlineWidth,
-    backgroundColor: "rgba(255,255,255,0.1)",
+  successIconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 8,
   },
-  orText: {
-    fontSize: 11, fontWeight: "700",
-    color: "rgba(148,163,184,0.5)",
-    letterSpacing: 0.8, textTransform: "uppercase",
+  successIconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(37,99,235,0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  successHeading: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1D4ED8",
+  },
+  successBody: {
+    fontSize: 13,
+    color: "#0f172a",
+    marginBottom: 10,
+  },
+  successSteps: {
+    gap: 2,
+    marginBottom: 10,
+  },
+  successStepText: {
+    fontSize: 12,
+    color: "#1f2937",
+  },
+  enterCodeButton: {
+    marginTop: 4,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  enterCodeGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    gap: 8,
+  },
+  enterCodeText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
   },
 
   // CTA
   ctaWrapper: {
-    height: 52, borderRadius: 140, overflow: "hidden",
+    height: 50, borderRadius: 140, overflow: "hidden",
     shadowColor: "#3B82F6",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.45, shadowRadius: 20, elevation: 10,
   },
   ctaGradient: {
+    height:50,
     flex: 1, paddingHorizontal: 24,
     borderRadius: 140, overflow: "hidden",
     alignItems: "center", justifyContent: "center",
