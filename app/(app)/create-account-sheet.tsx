@@ -251,6 +251,8 @@ export function CreateAccountSheet({ visible, onClose }: Props) {
   );
 }
 
+export default CreateAccountSheet;
+
 const styles = StyleSheet.create({
   label: {
     fontSize: 12,

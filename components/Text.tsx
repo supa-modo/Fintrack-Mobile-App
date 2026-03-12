@@ -3,11 +3,11 @@ import { Text as RNText, TextProps } from "react-native";
 
 const defaultFontStyle = { fontFamily: "GoogleSansFlex" as const };
 
-export function Text(props: TextProps) {
-  const { style, ...rest } = props;
+export function Text(props: TextProps & { allowFontScaling?: boolean }) {
+  const { style, allowFontScaling, ...rest } = props;
   return (
     <RNText
-      allowFontScaling={false}
+      allowFontScaling={allowFontScaling ?? false}
       style={[style, defaultFontStyle]}
       {...rest}
     />

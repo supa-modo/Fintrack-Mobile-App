@@ -42,6 +42,8 @@ interface BottomSheetProps {
   children: React.ReactNode;
 }
 
+export default BottomSheet;
+
 export function BottomSheet({
   visible,
   onClose,

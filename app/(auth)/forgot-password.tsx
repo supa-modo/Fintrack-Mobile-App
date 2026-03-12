@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useColorScheme } from "nativewind";
 
@@ -138,9 +139,9 @@ export default function ForgotPasswordScreen() {
           {success && lastContact ? (
             <Animated.View entering={FadeIn.duration(300)} style={styles.successInfoCard}>
               <View style={styles.successIconRow}>
-                <View style={styles.successIconCircle}>
+                {/* <View style={styles.successIconCircle}>
                   <Ionicons name="checkmark" size={18} color="#22c55e" />
-                </View>
+                </View> */}
                 <Text style={[styles.successHeading, !isDark && { color: "#0f172a" }]}>
                   Reset code sent
                 </Text>
@@ -175,8 +176,8 @@ export default function ForgotPasswordScreen() {
                   end={{ x: 1, y: 1 }}
                   style={styles.enterCodeGradient}
                 >
+                  <MaterialCommunityIcons name="lock-reset" size={18} color="#fff" />
                   <Text style={styles.enterCodeText}>Enter Reset Code</Text>
-                  <Ionicons name="key-outline" size={16} color="#fff" />
                 </LinearGradient>
               </Pressable>
             </Animated.View>
@@ -320,7 +321,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    marginBottom: 16,
     backgroundColor: "rgba(59,130,246,0.07)",
     borderWidth: 1,
     borderColor: "rgba(37,99,235,0.4)",

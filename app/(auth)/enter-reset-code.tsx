@@ -22,6 +22,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useColorScheme } from "nativewind";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const schema = z.object({
   code: z
@@ -242,7 +243,7 @@ export default function EnterResetCodeScreen() {
             </Animated.View>
           ) : null}
 
-          <Text style={styles.codeLabel}>6-digit code</Text>
+          <Text style={styles.codeLabel}>Enter 6-digit code sent to your {contactType === "email" ? "email address" : "phone number"}.</Text>
 
           <View style={styles.codeRow}>
             {inputs.map((ref, index) => (
@@ -263,37 +264,42 @@ export default function EnterResetCodeScreen() {
             <Text style={styles.codeError}>{errors.code.message}</Text>
           ) : null}
 
-          <Pressable onPress={handleResend} style={styles.resendPressable}>
-            <Text style={styles.resendText}>Resend code</Text>
+          <Pressable className="items-center" onPress={handleResend} style={styles.resendPressable}>
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons name="refresh" size={15} className="text-primary-600 dark:text-primary-400" />
+              <Text style={styles.resendText} className="ml-[0.3rem] underline underline-offset-2">Resend code</Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            onPress={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
+            style={({ pressed }) => [
+              styles.ctaWrapper,
+              pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
+            ]}
+          >
+            <LinearGradient
+              colors={["#3B82F6", "#1D4ED8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.ctaGradient}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <View style={styles.ctaContent}>
+                  <Text style={styles.ctaText}>Continue</Text>
+                  <View style={styles.ctaArrow}>
+                    <MaterialCommunityIcons name="arrow-right" size={14} color="#fff" />
+                  </View>
+                </View>
+              )}
+            </LinearGradient>
           </Pressable>
         </Animated.View>
 
-        <Pressable
-          onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
-          style={({ pressed }) => [
-            styles.ctaWrapper,
-            pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
-          ]}
-        >
-          <LinearGradient
-            colors={["#3B82F6", "#1D4ED8"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.ctaGradient}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <View style={styles.ctaContent}>
-                <Text style={styles.ctaText}>Continue</Text>
-                <View style={styles.ctaArrow}>
-                  <Ionicons name="arrow-forward" size={15} color="#fff" />
-                </View>
-              </View>
-            )}
-          </LinearGradient>
-        </Pressable>
+
 
         <Pressable
           onPress={() => router.replace("/(auth)/login")}
@@ -415,11 +421,9 @@ const styles = StyleSheet.create({
 
   codeLabel: {
     fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    fontWeight: "500",
     color: "rgba(148,163,184,0.9)",
-    marginBottom: 8,
+    marginBottom: 14,
   },
   codeRow: {
     flexDirection: "row",
@@ -428,8 +432,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   codeInput: {
-    height: 48,
-    width: 42,
+    height: 50,
+    width: 46,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: "rgba(148,163,184,0.6)",
@@ -441,7 +445,7 @@ const styles = StyleSheet.create({
   },
   codeError: {
     marginTop: 4,
-    fontSize: 12,
+    fontSize: 11,
     color: "#f97316",
   },
   resendPressable: {
@@ -462,6 +466,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.45,
     shadowRadius: 20,
     elevation: 10,
+    marginTop: 10,
   },
   ctaGradient: {
     flex: 1,
@@ -479,7 +484,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.3,
   },

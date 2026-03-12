@@ -384,6 +384,8 @@ export function CreateTransactionSheet({ visible, onClose, defaultType = "expens
   );
 }
 
+export default CreateTransactionSheet;
+
 const styles = StyleSheet.create({
   label: {
     fontSize: 12,

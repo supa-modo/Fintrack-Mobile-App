@@ -243,6 +243,8 @@ export function UpdateBalanceSheet({ visible, onClose, preselectedAccountId }: P
   );
 }
 
+export default UpdateBalanceSheet;
+
 const styles = StyleSheet.create({
   label: {
     fontSize: 12,
