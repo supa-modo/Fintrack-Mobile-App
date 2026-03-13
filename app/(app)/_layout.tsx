@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useColorScheme } from "nativewind";
 import { Text } from "../../components/Text";
+import { AuthBoundary } from "../../components/AuthBoundary";
 import React, { useEffect } from "react";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
@@ -20,6 +21,8 @@ const TABS = [
   { name: "transactions", label: "Activity", icon: "receipt-outline", iconActive: "receipt" },
   { name: "profile",      label: "Profile",  icon: "person-outline",  iconActive: "person"  },
 ];
+
+const VISIBLE_TAB_NAMES = ["index", "accounts", "transactions", "profile"] as const;
 
 const ACTIVE_COLOR   = "#3B82F6";
 const DURATION       = 180;
@@ -31,7 +34,8 @@ function TabItem({
   route: any; isFocused: boolean;
   onPress: () => void; onLongPress: () => void; isDark: boolean;
 }) {
-  const tab      = TABS.find((t) => t.name === route.name) ?? TABS[0];
+  const tab = TABS.find((t) => t.name === route.name);
+  if (!tab) return null;
   const progress = useSharedValue(isFocused ? 1 : 0);
 
   useEffect(() => {
@@ -81,13 +85,18 @@ function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { colorScheme } = useColorScheme();
   const isDark  = colorScheme === "dark";
 
+  const routesToShow = state.routes.filter((route) =>
+    VISIBLE_TAB_NAMES.includes(route.name as (typeof VISIBLE_TAB_NAMES)[number])
+  );
+
   return (
     <View
       style={[styles.outer, { bottom: Math.max(insets.bottom, 8) + 8 }]}
       pointerEvents="box-none"
     >
       <View style={[styles.bar, isDark ? styles.barDark : styles.barLight]}>
-        {state.routes.map((route, index) => {
+        {routesToShow.map((route) => {
+          const index = state.routes.findIndex((r) => r.key === route.key);
           const isFocused   = state.index === index;
           const { options } = descriptors[route.key];
           if (options.tabBarButton === null) return null;
@@ -119,15 +128,17 @@ function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
 export default function AppLayout() {
   return (
-    <Tabs
-      tabBar={(props) => <FloatingTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="accounts" />
-      <Tabs.Screen name="transactions" />
-      <Tabs.Screen name="profile" />
-    </Tabs>
+    <AuthBoundary>
+      <Tabs
+        tabBar={(props) => <FloatingTabBar {...props} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="accounts" />
+        <Tabs.Screen name="transactions" />
+        <Tabs.Screen name="profile" />
+      </Tabs>
+    </AuthBoundary>
   );
 }
 
@@ -164,7 +175,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 3,
-    paddingVertical: 8,
+    paddingVertical: 10,
     position: "relative",
   },
 

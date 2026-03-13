@@ -18,8 +18,7 @@ export default function IndexScreen() {
     );
   }
 
-  if (hasOnboarded) {
-    // if (!hasOnboarded) {
+  if (!hasOnboarded) {
     return <Redirect href="/(onboarding)" />;
   }
   if (!useAuthStore.getState().accessToken) {

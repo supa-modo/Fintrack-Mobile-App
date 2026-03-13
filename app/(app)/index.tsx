@@ -14,13 +14,18 @@ import { getSummary, getSpending } from "../../services/dashboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useColorScheme } from "nativewind";
 
 import { CreateAccountSheet } from "../(app)/create-account-sheet";
 import { CreateTransactionSheet } from "../(app)/create-transaction-sheet";
 import { UpdateBalanceSheet } from "../(app)/update-balance-sheet";
+import { SpendingLineChart } from "components/dashboard/SpendingLineChart";
+import { AccountRow } from "components/dashboard/AccountRow";
+import { router } from "expo-router";
+import { logout as logoutApi } from "../../services/auth";
+import { useAuthStore } from "../../store/authStore";
 
 const { width } = Dimensions.get("window");
 
@@ -47,6 +52,8 @@ export default function DashboardScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
+  const { logout } = useAuthStore();
+
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showUpdateBalance, setShowUpdateBalance] = useState(false);
@@ -69,6 +76,16 @@ export default function DashboardScreen() {
     setRefreshing(true);
     await Promise.all([refetchSummary(), refetchSpending()]);
     setRefreshing(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch {
+      // ignore API errors on logout; still clear local session
+    } finally {
+      await logout();
+    }
   };
 
   if (summaryLoading && !summary) {
@@ -103,20 +120,20 @@ export default function DashboardScreen() {
   // ── Quick action definitions (3 items) ──
   const QUICK_ACTIONS = [
     {
-      icon: "wallet" as const,
-      label: "Add Account",
+      icon: "wallet-plus" as const,
+      label: "Account",
       color: "#3B82F6",
       onPress: () => setShowAddAccount(true),
     },
     {
       icon: "swap-horizontal-bold" as const,
-      label: "New Transaction",
+      label: "Transact",
       color: "#8B5CF6",
       onPress: () => openTx("expense"),
     },
     {
       icon: "update" as const,
-      label: "Update Balance",
+      label: "Update",
       color: "#10B981",
       onPress: () => setShowUpdateBalance(true),
     },
@@ -126,7 +143,7 @@ export default function DashboardScreen() {
     <>
       <ScrollView
         style={isDark ? styles.bgDark : styles.bgLight}
-        contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 110 }}
+        contentContainerStyle={{ paddingTop: insets.top + 8 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3B82F6" />
         }
@@ -143,6 +160,7 @@ export default function DashboardScreen() {
           <View style={styles.headerRight}>
             {/* Log out */}
             <Pressable
+              onPress={handleLogout}
               style={[
                 styles.headerIconBtn,
                 isDark ? styles.headerIconBtnDark : styles.headerIconBtnLight,
@@ -180,9 +198,13 @@ export default function DashboardScreen() {
             {/* ── Card top row: chip  +  account count ── */}
             <View style={styles.cardTopRow}>
 
-              <View style={styles.cardBrandRow}>
-                <View style={[styles.cardBrandDot1, { backgroundColor: "rgb(220 38 38)" }]} />
-                <View style={[styles.cardBrandDot2, { backgroundColor: "rgb(250 204 21 / 0.8)" }]} className="bg-yellow-400/80" />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <View style={styles.cardBrandRow}>
+                  <View style={[styles.cardBrandDot1, { backgroundColor: "rgb(220 38 38)" }]} />
+                  <View style={[styles.cardBrandDot2, { backgroundColor: "rgb(250 204 21 / 0.8)" }]} className="bg-yellow-400/80" />
+                </View>
+
+                <Text style={{ fontSize: 14, fontWeight: "800", color: "#FFFFFF" }}>FInTrack</Text>
               </View>
 
               {/* Account count badge */}
@@ -192,6 +214,7 @@ export default function DashboardScreen() {
                   {accounts.length} {accounts.length === 1 ? "Account" : "Accounts"}
                 </Text>
               </View>
+
             </View>
 
             {/* Balance label + amount */}
@@ -260,7 +283,7 @@ export default function DashboardScreen() {
 
         {/* ── Quick Actions (3-column) ── */}
         <Animated.View entering={FadeInDown.duration(450).delay(120)} style={styles.sectionWrapper}>
-         <View style={styles.quickRow}>
+          <View style={styles.quickRow}>
             {QUICK_ACTIONS.map((action) => (
               <Pressable
                 key={action.label}
@@ -273,7 +296,7 @@ export default function DashboardScreen() {
               >
                 {/* Icon */}
                 <View style={[styles.quickIconWrap]}>
-                  <MaterialCommunityIcons name={action.icon} size={30} color={action.color} />
+                  <MaterialCommunityIcons name={action.icon} size={25} color={action.color} />
                 </View>
                 {/* Label */}
                 <Text style={[styles.quickLabel, isDark && { color: "#CBD5E1" }]} numberOfLines={2}>
@@ -286,7 +309,6 @@ export default function DashboardScreen() {
 
         {/* ── Spending progress ── */}
         <Animated.View entering={FadeInDown.duration(450).delay(160)} style={styles.sectionWrapper}>
-          <Text style={[styles.sectionTitle, isDark && { color: "#F1F5F9" }]}>This Month</Text>
           <View style={[styles.progressCard, isDark ? styles.cardDark : styles.cardLight]}>
             <View style={styles.progressHeader}>
               <Text style={[styles.progressTitle, isDark && { color: "#E2E8F0" }]}>
@@ -335,89 +357,64 @@ export default function DashboardScreen() {
           </View>
         </Animated.View>
 
-        {/* ── Accounts preview ── */}
-        <Animated.View entering={FadeInDown.duration(450).delay(200)} style={styles.sectionWrapper}>
-          <View style={styles.sectionRow}>
-            <Text style={[styles.sectionTitle, isDark && { color: "#F1F5F9" }]}>Accounts</Text>
-            <Pressable onPress={() => setShowAddAccount(true)} style={styles.seeAllBtn}>
-              <Ionicons name="add" size={13} color="#3B82F6" />
-              <Text style={styles.seeAllText}>Add</Text>
-            </Pressable>
-          </View>
-
-          {accounts.length === 0 ? (
-            <Pressable
-              onPress={() => setShowAddAccount(true)}
-              style={[styles.emptyCard, isDark ? styles.cardDark : styles.cardLight]}
-            >
-              <Ionicons name="wallet-outline" size={30} color={isDark ? "#334155" : "#CBD5E1"} />
-              <Text style={[styles.emptyText, isDark && { color: "#475569" }]}>
-                Tap to add your first account
-              </Text>
-            </Pressable>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 12, paddingRight: 4 }}
-            >
-              {accounts.map((acc, i) => (
-                <LinearGradient
-                  key={acc.id}
-                  colors={ACCOUNT_COLORS[i % ACCOUNT_COLORS.length]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.accountPill}
-                >
-                  <View style={styles.accountPillTop}>
-                    <View style={styles.accountIconCircle}>
-                      <Ionicons name="card-outline" size={13} color="#fff" />
-                    </View>
-                    <Text style={styles.accountType}>{acc.type}</Text>
-                  </View>
-                  <Text style={styles.accountName}>{acc.name}</Text>
-                  <Text style={styles.accountBalance}>
-                    {formatCurrency(acc.balance)}
-                  </Text>
-                </LinearGradient>
-              ))}
-            </ScrollView>
-          )}
-        </Animated.View>
-
         {/* ── Spending trend ── */}
         {monthlyTrend.length > 0 && (
-          <Animated.View entering={FadeInDown.duration(450).delay(240)} style={styles.sectionWrapper}>
-            <Text style={[styles.sectionTitle, isDark && { color: "#F1F5F9" }]}>Spending Trend</Text>
-            <View style={[styles.trendCard, isDark ? styles.cardDark : styles.cardLight]}>
-              {(() => {
-                const last6 = monthlyTrend.slice(-6);
-                const maxVal = Math.max(...last6.map((i) => i.total), 1);
-                return last6.map((item, i) => (
-                  <View key={i} style={styles.trendRow}>
-                    <Text style={[styles.trendMonth, isDark && { color: "#64748B" }]}>
-                      {new Date(item.month).toLocaleDateString("en-KE", { month: "short" })}
-                    </Text>
-                    <View style={styles.trendBarTrack}>
-                      <LinearGradient
-                        colors={["#3B82F6", "#1D4ED8"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={[
-                          styles.trendBarFill,
-                          { width: `${(item.total / maxVal) * 100}%` as any },
-                        ]}
-                      />
-                    </View>
-                    <Text style={[styles.trendAmt, isDark && { color: "#CBD5E1" }]}>
-                      {formatCompact(item.total)}
-                    </Text>
-                  </View>
-                ));
-              })()}
+          <Animated.View entering={FadeInDown.duration(450).delay(160)} style={styles.sectionWrapper}>
+            <View style={styles.sectionRow}>
+              <Text style={[styles.sectionTitle, isDark && { color: "#F1F5F9" }]}>
+                Spending Trend
+              </Text>
+              <Text style={[styles.trendSubtitle, isDark && { color: "#475569" }]}>
+                Last 6 months
+              </Text>
             </View>
+            <SpendingLineChart data={monthlyTrend.slice(-6)} isDark={isDark} />
           </Animated.View>
         )}
+
+        {/* ── Accounts ── */}
+        <Animated.View entering={FadeInDown.duration(450).delay(200)} style={styles.accountsSection}>
+          {accounts.length === 0 ? (
+
+            <View style={{marginBottom: 100}}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 20, paddingHorizontal: 16 }}>
+                <Text style={[styles.sectionTitle, isDark && { color: "#F1F5F9" }]}>Your Accounts</Text>
+                <Pressable onPress={() => setShowAddAccount(true)} style={[styles.seeAllBtn, { borderRadius: 140, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: "rgba(59,130,246, 1)" }]}>
+                  <MaterialIcons name="add" size={19} color="#fff" />
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: "#fff" }}>Add New</Text>
+                </Pressable>
+              </View>
+              <Pressable
+                onPress={() => setShowAddAccount(true)}
+                style={[styles.emptyCard, isDark ? styles.cardDark : styles.cardLight]}
+              >
+                <Ionicons name="wallet-outline" size={30} color={isDark ? "#334155" : "#CBD5E1"} />
+                <Text style={[styles.emptyText, isDark && { color: "#475569" }]}>
+                  Tap here to add your first account
+                </Text>
+              </Pressable></View>
+          ) : (
+            <View style={[styles.accountsList, isDark ? styles.cardDark : styles.cardLight]}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 20, paddingHorizontal: 16 }}>
+                <Text style={[styles.sectionTitle, isDark && { color: "#F1F5F9" }]}>Your Accounts</Text>
+                <Pressable onPress={() => setShowAddAccount(true)} style={[styles.seeAllBtn, { borderRadius: 140, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: "rgba(59,130,246, 1)" }]}>
+                  <MaterialIcons name="add" size={19} color="#fff" />
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: "#fff" }}>Add New</Text>
+                </Pressable>
+              </View>
+              {accounts.map((acc, i) => (
+                <AccountRow
+                  key={acc.id}
+                  account={acc}
+                  index={i}
+                  isDark={isDark}
+                  isLast={i === accounts.length - 1}
+                  onPress={() => router.push(`/account/${acc.id}`)}
+                />
+              ))}
+            </View>
+          )}
+        </Animated.View>
       </ScrollView >
 
       {/* ── Modals ── */}
@@ -642,11 +639,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
     color: "#0F172A",
     letterSpacing: -0.2,
     marginBottom: 12,
+    marginLeft: 6,
   },
   seeAllBtn: {
     flexDirection: "row",
@@ -656,6 +654,25 @@ const styles = StyleSheet.create({
   },
   seeAllText: { fontSize: 13, color: "#3B82F6", fontWeight: "600" },
 
+
+  trendSubtitle: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#94A3B8",
+    marginBottom: 12,
+  },
+  accountsList: {
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    overflow: "hidden",
+    paddingBottom: 120,
+  },
+
+  accountsSection: {
+    marginBottom: 0,  // no bottom gap — flush to page bottom
+  },
   // Shared card surfaces
   cardDark: { backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
   cardLight: {
@@ -670,16 +687,17 @@ const styles = StyleSheet.create({
   // ── Quick Actions ─────────────────────────────────────────────────────────
   quickRow: {
     flexDirection: "row",
-    gap: 10,
+    justifyContent: "space-between",
   },
   quickCard: {
     flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 18,
-    paddingVertical: 16,
-    paddingHorizontal: 6,
-    gap: 10,
+    borderRadius: 140,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginHorizontal: 4,
   },
   quickCardLight: {
     backgroundColor: "#FFFFFF",
@@ -697,11 +715,13 @@ const styles = StyleSheet.create({
   quickIconWrap: {
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 8,
+
   },
   quickLabel: {
-    fontSize: 11.5,
-    fontWeight: "700",
-    color: "#0F172A",
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#6b7289",
     textAlign: "center",
     lineHeight: 15,
   },
@@ -768,8 +788,9 @@ const styles = StyleSheet.create({
     padding: 28,
     alignItems: "center",
     gap: 8,
+    marginHorizontal: 14,
   },
-  emptyText: { fontSize: 13, color: "#94A3B8", fontWeight: "500" },
+  emptyText: { fontSize: 12, color: "#94A3B8", fontWeight: "400" },
   errorTitle: { fontSize: 15, fontWeight: "600", color: "#475569", marginTop: 12, marginBottom: 20 },
   retryBtn: { backgroundColor: "#3B82F6", paddingHorizontal: 22, paddingVertical: 8, borderRadius: 140, flexDirection: "row", alignItems: "center", gap: 6 },
   retryText: { color: "#fff", fontWeight: "700", fontSize: 12 },

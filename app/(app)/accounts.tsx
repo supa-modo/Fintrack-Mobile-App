@@ -318,12 +318,27 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontSize: 17, fontWeight: "700", color: "#0F172A", letterSpacing: -0.3, marginBottom: 14 },
 
-  accountsList: { gap: 10 },
-  accountCard: { flexDirection: "row", alignItems: "center", borderRadius: 18, padding: 14, paddingLeft: 18, gap: 12, overflow: "hidden" },
+  accountsList: {},
+  accountCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 18,
+    padding: 14,
+    paddingLeft: 18,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
   accountCardDark:  { backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(255,255,255,0.07)" },
   accountCardLight: { backgroundColor: "#FFFFFF", shadowColor: "#1E3A5F", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3 },
   accountCardAccent: { position: "absolute", left: 0, top: 10, bottom: 10, width: 4, borderRadius: 2 },
-  accountIconBg: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  accountIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
   accountCardInfo: { flex: 1 },
   accountCardName: { fontSize: 15, fontWeight: "700", color: "#0F172A", marginBottom: 5 },
   accountCardMeta: { flexDirection: "row", alignItems: "center" },
@@ -334,11 +349,28 @@ const styles = StyleSheet.create({
   accountBalanceTrend: { flexDirection: "row", alignItems: "center", gap: 3 },
   accountBalanceTrendText: { fontSize: 11, fontWeight: "600" },
 
-  quickActionsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  quickAction: { width: "47%", borderRadius: 18, padding: 18, alignItems: "center", gap: 10 },
+  quickActionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  quickAction: {
+    width: "47%",
+    borderRadius: 18,
+    padding: 18,
+    alignItems: "center",
+    marginBottom: 12,
+  },
   quickActionDark:  { backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(255,255,255,0.07)" },
   quickActionLight: { backgroundColor: "#FFFFFF", shadowColor: "#1E3A5F", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
-  quickActionIcon: { width: 48, height: 48, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
   quickActionLabel: { fontSize: 13, fontWeight: "600", color: "#0F172A" },
 
   emptyCard: { borderRadius: 24, padding: 32, alignItems: "center", gap: 8 },
@@ -353,8 +385,8 @@ const styles = StyleSheet.create({
 
   // FAB
   fabContainer: { position: "absolute", right: 24, alignItems: "flex-end", gap: 12 },
-  fabMenuItem: { flexDirection: "row", alignItems: "center", gap: 10 },
-  fabMenuLabel: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12 },
+  fabMenuItem: { flexDirection: "row", alignItems: "center" },
+  fabMenuLabel: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12, marginRight: 10 },
   fabMenuLabelLight: { backgroundColor: "#fff", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
   fabMenuLabelDark:  { backgroundColor: "#0D1B2E", borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" },
   fabMenuLabelText: { fontSize: 13, fontWeight: "700", color: "#0F172A" },

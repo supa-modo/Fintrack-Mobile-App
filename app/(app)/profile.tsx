@@ -627,11 +627,6 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* Footer */}
-        <Animated.View entering={FadeInDown.duration(400).delay(600)} style={styles.footer}>
-          <Text style={styles.footerText}>Dime · Made with ♥ in Nairobi</Text>
-          <Text style={styles.footerVersion}>Version 1.0.0</Text>
-        </Animated.View>
       </ScrollView>
 
       {/* ── Sheets ── */}
@@ -851,13 +846,13 @@ const styles = StyleSheet.create({
   },
 
   // Settings
-  settingsGroup: { gap: 8 },
+  settingsGroup: {},
   settingsRow: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 16,
     padding: 14,
-    gap: 12,
+    marginBottom: 8,
   },
   settingsRowLight: {
     backgroundColor: "#fff",
@@ -878,6 +873,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 12,
   },
   settingsInfo: { flex: 1 },
   settingsLabel: {
