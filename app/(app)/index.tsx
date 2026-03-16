@@ -289,11 +289,16 @@ export default function DashboardScreen() {
                 key={action.label}
                 onPress={action.onPress}
                 style={({ pressed }) => [
-                  styles.quickCard,
-                  isDark ? styles.quickCardDark : styles.quickCardLight,
+                  
                   pressed && { opacity: 0.75, transform: [{ scale: 0.97 }] },
                 ]}
+                className="rounded-full"
               >
+                <View style={[styles.quickCard,
+                //  onPress && { opacity: 0.75, transform: [{ scale: 0.97 }] },
+                  isDark ? styles.quickCardDark : styles.quickCardLight]}>
+                 
+                
                 {/* Icon */}
                 <View style={[styles.quickIconWrap]}>
                   <MaterialCommunityIcons name={action.icon} size={25} color={action.color} />
@@ -301,7 +306,7 @@ export default function DashboardScreen() {
                 {/* Label */}
                 <Text style={[styles.quickLabel, isDark && { color: "#CBD5E1" }]} numberOfLines={2}>
                   {action.label}
-                </Text>
+                </Text></View>
               </Pressable>
             ))}
           </View>
@@ -697,7 +702,6 @@ const styles = StyleSheet.create({
     borderRadius: 140,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    marginHorizontal: 4,
   },
   quickCardLight: {
     backgroundColor: "#FFFFFF",

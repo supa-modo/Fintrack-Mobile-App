@@ -205,7 +205,7 @@ export default function TransactionsScreen() {
     <View style={[styles.flex, bg]}>
       {/* Sticky header */}
       <Animated.View
-        entering={FadeInDown.duration(500).springify()}
+        entering={FadeInDown.duration(500)}
         style={[styles.headerContainer, { paddingTop: insets.top + 8 }, isDark ? styles.headerDark : styles.headerLight]}
       >
         <View style={styles.headerRow}>
@@ -217,7 +217,7 @@ export default function TransactionsScreen() {
             onPress={() => openTx("expense")}
             style={[styles.searchBtn, isDark ? { backgroundColor: "rgba(255,255,255,0.07)" } : { backgroundColor: "rgba(15,23,42,0.06)" }]}
           >
-            <Ionicons name="add" size={20} color={isDark ? "#94A3B8" : "#475569"} />
+            <Ionicons name="search" size={20} color={isDark ? "#94A3B8" : "#475569"} />
           </Pressable>
         </View>
 
@@ -296,10 +296,10 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   px6: { paddingHorizontal: 24 },
 
-  headerContainer: { paddingHorizontal: 24, paddingBottom: 16 },
+  headerContainer: { paddingHorizontal: 24, paddingBottom: 16, },
   headerDark:  { backgroundColor: "#020B18", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "rgba(255,255,255,0.07)" },
   headerLight: { backgroundColor: "#F1F5F9", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "rgba(15,23,42,0.07)" },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14, paddingTop: 32 },
   headerTitle: { fontSize: 26, fontWeight: "800", color: "#0F172A", letterSpacing: -0.5 },
   headerSub: { fontSize: 13, color: "#94A3B8", fontWeight: "500", marginTop: 2 },
   searchBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
